@@ -9,7 +9,18 @@ const proxy = httpProxy.createProxyServer({
   target: TARGET_DOMAIN,
   changeOrigin: true,
   ws: true,
-  secure: false
+  secure: false,
+  xfwd: true,
+  headers: {
+    Connection: "keep-alive"
+  }
+});
+
+proxy.on("proxyReq", (proxyReq, req, res) => {
+  proxyReq.setHeader(
+    "Host",
+    new URL(TARGET_DOMAIN).hostname
+  );
 });
 
 proxy.on("error", (err, req, res) => {
@@ -34,7 +45,7 @@ server.on("upgrade", (req, socket, head) => {
   proxy.ws(req, socket, head);
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 server.listen(PORT, () => {
   console.log(`Proxy running on ${PORT}`);
